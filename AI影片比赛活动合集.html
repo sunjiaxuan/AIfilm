@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎬 2026 AI影片/视频比赛活动实时追踪</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+
+:root {
+  --bg-primary: #070b14;
+  --bg-secondary: #0d1321;
+  --bg-card: #141c2f;
+  --bg-card-hover: #192240;
+  --accent-purple: #8b5cf6;
+  --accent-blue: #3b82f6;
+  --accent-cyan: #06b6d4;
+  --accent-green: #10b981;
+  --accent-orange: #f59e0b;
+  --accent-red: #ef4444;
+  --accent-pink: #ec4899;
+  --accent-gold: #eab308;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border: rgba(255,255,255,0.07);
+  --glow-green: 0 0 20px rgba(16,185,129,0.3);
+  --glow-red: 0 0 20px rgba(239,68,68,0.3);
+  --glow-orange: 0 0 20px rgba(245,158,11,0.3);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Noto Sans SC', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* HEADER */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(7,11,20,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+}
+.header-inner {
+  max-width: 1600px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+}
+.logo {
+  font-size: 18px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.logo span { color: var(--accent-purple); }
+.live-clock {
+  font-size: 13px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.live-dot {
+  width: 7px; height: 7px;
+  background: var(--accent-green);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+/* NAV TABS */
+.nav-bar {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 16px 32px 0;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.nav-tab {
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+.nav-tab:hover { background: var(--bg-card); color: var(--text-primary); }
+.nav-tab.active {
+  background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(59,130,246,0.2));
+  border-color: rgba(139,92,246,0.4);
+  color: var(--accent-purple);
+}
+
+/* STATS */
+.stats-section {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 24px 32px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+}
+.stat-card .num {
+  font-size: 32px;
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.stat-card .num.green { color: var(--accent-green); }
+.stat-card .num.orange { color: var(--accent-orange); }
+.stat-card .num.red { color: var(--accent-red); }
+.stat-card .num.cyan { color: var(--accent-cyan); }
+.stat-card .num.purple { color: var(--accent-purple); }
+.stat-card .label { font-size: 12px; color: var(--text-muted); }
+
+/* LEGEND */
+.legend-bar {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 32px 16px;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink:0; }
+.legend-dot.open { background: var(--accent-green); box-shadow: 0 0 6px rgba(16,185,129,0.5); }
+.legend-dot.soon { background: var(--accent-orange); box-shadow: 0 0 6px rgba(245,158,11,0.5); }
+.legend-dot.today { background: var(--accent-red); box-shadow: 0 0 6px rgba(239,68,68,0.5); animation: pulse 1s infinite; }
+.legend-dot.closed { background: var(--text-muted); opacity: 0.5; }
+.legend-dot.ongoing { background: var(--accent-cyan); box-shadow: 0 0 6px rgba(6,182,212,0.5); }
+
+/* PROGRESS TRACKER */
+.progress-section {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 32px 20px;
+}
+.progress-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-orange);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.progress-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 10px;
+}
+.progress-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+.progress-bar-wrap {
+  flex: 1;
+  min-width: 0;
+}
+.progress-name {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.progress-bar {
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1s ease;
+}
+.progress-fill.green { background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan)); }
+.progress-fill.orange { background: linear-gradient(90deg, var(--accent-orange), #f97316); }
+.progress-fill.red { background: linear-gradient(90deg, var(--accent-red), #f43f5e); }
+.progress-days {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  min-width: 60px;
+  text-align: right;
+}
+
+/* MAIN CONTENT */
+.container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 32px 60px;
+}
+
+.category {
+  margin-bottom: 40px;
+}
+.category-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.cat-icon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.cat-icon.c1 { background: linear-gradient(135deg, #dc2626, #f97316); }
+.cat-icon.c2 { background: linear-gradient(135deg, #2563eb, #7c3aed); }
+.cat-icon.c3 { background: linear-gradient(135deg, #059669, #0d9488); }
+.cat-icon.c4 { background: linear-gradient(135deg, #d946ef, #ec4899); }
+.cat-icon.c5 { background: linear-gradient(135deg, #0891b2, #6366f1); }
+.cat-icon.c6 { background: linear-gradient(135deg, #ca8a04, #ea580c); }
+.cat-icon.c7 { background: linear-gradient(135deg, #4f46e5, #0ea5e9); }
+.cat-title { font-size: 20px; font-weight: 700; }
+.cat-count {
+  font-size: 11px;
+  padding: 2px 10px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.05);
+  color: var(--text-muted);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+  gap: 14px;
+}
+
+/* CARD */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px 22px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.card.s-open::before { background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan)); }
+.card.s-soon::before { background: linear-gradient(90deg, var(--accent-orange), #f97316); }
+.card.s-today::before { background: linear-gradient(90deg, var(--accent-red), #f43f5e); }
+.card.s-closed::before { background: var(--text-muted); opacity: 0.3; }
+.card.s-ongoing::before { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); }
+
+.card:hover {
+  border-color: rgba(255,255,255,0.12);
+  background: var(--bg-card-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  gap: 10px;
+}
+.card-name {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+  flex: 1;
+}
+
+.badge {
+  flex-shrink: 0;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+.badge.open { background: rgba(16,185,129,0.12); color: var(--accent-green); border: 1px solid rgba(16,185,129,0.25); }
+.badge.soon { background: rgba(245,158,11,0.12); color: var(--accent-orange); border: 1px solid rgba(245,158,11,0.25); }
+.badge.today { background: rgba(239,68,68,0.12); color: var(--accent-red); border: 1px solid rgba(239,68,68,0.25); }
+.badge.closed { background: rgba(100,116,139,0.1); color: var(--text-muted); border: 1px solid rgba(100,116,139,0.15); }
+.badge.ongoing { background: rgba(6,182,212,0.12); color: var(--accent-cyan); border: 1px solid rgba(6,182,212,0.25); }
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px;
+  border-radius: 5px;
+  background: rgba(255,255,255,0.03);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.tag.t-org { background: rgba(245,158,11,0.06); color: var(--accent-orange); }
+.tag.t-cyan { background: rgba(6,182,212,0.06); color: var(--accent-cyan); }
+.tag.t-purple { background: rgba(139,92,246,0.06); color: var(--accent-purple); }
+
+.tag.t-green { background: rgba(16,185,129,0.06); color: var(--accent-green); }
+.tag.t-pink { background: rgba(236,72,153,0.06); color: var(--accent-pink); }
+.tag.t-gold { background: rgba(234,179,8,0.06); color: var(--accent-gold); }
+.tag.t-blue { background: rgba(59,130,246,0.06); color: var(--accent-blue); }
+
+/* ACTIVITY NAME LINK */
+.card-name a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.card-name a:hover {
+  color: var(--accent-cyan);
+}
+.card-name a::after {
+  content: ' ↗';
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.card-name a:hover::after {
+  opacity: 0.7;
+}
+
+.divider { height: 1px; background: var(--border); margin-bottom: 10px; }
+
+.req {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+.req .rl { color: var(--accent-purple); font-weight: 600; }
+.req .rh { color: var(--text-primary); font-weight: 500; }
+.req .rw { color: var(--accent-cyan); }
+
+/* COUNTDOWN BOX */
+.countdown-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 5px;
+  background: rgba(245,158,11,0.08);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent-orange);
+  margin-bottom: 10px;
+}
+.countdown-box.urgent { background: rgba(239,68,68,0.1); color: var(--accent-red); }
+.countdown-box.safe { background: rgba(16,185,129,0.08); color: var(--accent-green); }
+
+/* FOOTER */
+.footer {
+  text-align: center;
+  padding: 32px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.footer strong { color: var(--text-secondary); }
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .header-inner,.nav-bar,.stats-section,.legend-bar,.progress-section,.container { padding-left: 16px; padding-right: 16px; }
+  .cards { grid-template-columns: 1fr; }
+  .progress-grid { grid-template-columns: 1fr; }
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+
+/* FILTER HIDE */
+[data-status].hide { display: none; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-inner">
+    <div class="logo"><span>🎬</span> AI 影片比赛实时追踪</div>
+    <div class="live-clock">
+      <span class="live-dot"></span>
+      <span id="clock"></span>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav-bar">
+  <div class="nav-tab active" onclick="filter('all')">📋 全部比赛</div>
+  <div class="nav-tab" onclick="filter('open')">🟢 征稿中（充裕）</div>
+  <div class="nav-tab" onclick="filter('soon')">🟠 即将截止</div>
+  <div class="nav-tab" onclick="filter('today')">🔴 今日截止</div>
+  <div class="nav-tab" onclick="filter('ongoing')">🔵 持续征稿</div>
+  <div class="nav-tab" onclick="filter('closed')">⚫ 已截止</div>
+</div>
+
+<!-- STATS -->
+<div class="stats-section">
+<div class="stat-card"><div class="num purple" id="stat-total">30</div><div class="label">收录比赛总数</div></div>
+<div class="stat-card"><div class="num green" id="stat-open">12</div><div class="label">仍在征稿中</div></div>
+<div class="stat-card"><div class="num orange" id="stat-soon">3</div><div class="label">即将截止（≤7天）</div></div>
+<div class="stat-card"><div class="num cyan" id="stat-ongoing">4</div><div class="label">持续/长期征稿</div></div>
+<div class="stat-card"><div class="num red" id="stat-closed">11</div><div class="label">已截止</div></div>
+<div class="stat-card"><div class="num green">7</div><div class="label">举办方分类</div></div>
+</div>
+
+<!-- LEGEND -->
+<div class="legend-bar">
+  <div class="legend-item"><span class="legend-dot open"></span>征稿中（充裕）</div>
+  <div class="legend-item"><span class="legend-dot soon"></span>即将截止（≤7天）</div>
+  <div class="legend-item"><span class="legend-dot today"></span>今日截止</div>
+  <div class="legend-item"><span class="legend-dot ongoing"></span>持续/长期征稿</div>
+  <div class="legend-item"><span class="legend-dot closed"></span>已截止</div>
+</div>
+
+<!-- PROGRESS TRACKER - 征稿中的比赛进度 -->
+<div class="progress-section">
+  <div class="progress-title">⏱️ 征稿进度实时追踪</div>
+  <div class="progress-grid" id="progressGrid"></div>
+</div>
+
+<div class="container">
+
+<!-- ======================= -->
+<!-- 1️⃣ 国内科技公司 -->
+<!-- ======================= -->
+<div class="category">
+  <div class="category-header">
+    <div class="cat-icon c1">🏢</div>
+    <div><span class="cat-title">国内科技公司</span><span class="cat-count">6场</span></div>
+  </div>
+  <div class="cards">
+
+    <div class="card s-open" data-status="open">
+      <div class="card-top">
+        <div class="card-name"><a href="https://www.aitop100.cn/infomation/details/33518.html" target="_blank" rel="noopener">可灵AI NEXTGEN 2026 高校AIGC创作大赛</a></div>
+        <span class="badge open">征稿中</span>
+      </div>
+      <div class="tags">
+        <span class="tag">🏢 快手·可灵AI</span>
+        <span class="tag t-org">⏰ 截止 5月15日</span>
+        <span class="tag t-cyan">💰 最高14,000元</span>
+        <span class="tag t-pink">🎞️ 赛道：影像 / 广告 / 文化</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>
+        仅限<span class="rh">全球高校在读学生</span>（每队≤5人），三大赛道可选。
+        AI生成占比<span class="rh">≥80%</span>，可灵AI占比<span class="rh">≥50%</span>。
+        时长≤15分钟，MOV/MP4格式。
+      </div>
+    </div>
+
+    <div class="card s-open" data-status="open">
+      <div class="card-top">
+        <div class="card-name"><a href="https://www.aitop100.cn/infomation/details/33476.html" target="_blank" rel="noopener">2026"马栏山杯"AIGC原创动漫创意大赛</a></div>
+        <span class="badge open">征稿中</span>
+      </div>
+      <div class="tags">
+        <span class="tag">🏢 芒果TV × 中南传媒</span>
+        <span class="tag t-org">⏰ 截止 5月5日</span>
+        <span class="tag t-cyan">💰 最高15万元（百万奖金池）</span>
+        <span class="tag t-pink">🎞️ 赛道：创意征集 / 成片征集</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>
+        双赛道：①<span class="rh">创意征集</span>（低门槛，故事梗概/角色设定/美术方案即可）；②<span class="rh">成片征集</span>（原创漫画或动画作品）。
+        面向全社会，通过芒果TV APP搜索"2026马栏山杯AIGC原创动漫创意大赛"扫码报名。获奖者获产业孵化+全链开发支持。
+      </div>
+    </div>
+
+    <div class="card s-today" data-status="today">
+      <div class="card-top">
+        <div class="card-name"><a href="https://www.aitop100.cn/infomation/details/33299.html" target="_blank" rel="noopener">百度·AIGC未来创作联赛S3（北影节游戏IP赛道）</a></div>
+        <span class="badge today">今日截止</span>
+      </div>
+      <div class="tags">
+        <span class="tag">🏢 百度百家号</span>
+        <span class="tag t-org">⏰ 截止 3月31日</span>
+        <span class="tag t-cyan">💰 最高1万元+播放量奖励</span>
+        <span class="tag t-pink">🎞️ 赛道：游戏IP主题赛 / 自由赛</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>
+        以游戏IP为核心（可选《和平精英》《永劫无间》等），时长<span class="rh">30秒-5分钟</span>。
+        完整故事情节，AI使用率<span class="rh">≥50%</span>，≥1080P。
+      </div>
+    </div>
+
+    <div class="card s-open" data-status="open">
+      <div class="card-top">
+        <div class="card-name"><a href="https://aigc.vivo.com.cn/" target="_blank" rel="noopener">中国高校计算机大赛·AIGC创新赛（第三届）</a></div>
+        <span class="badge open">征稿中</span>
+      </div>
+      <div class="tags">
+        <span class="tag">🏢 南开大学 × vivo</span>
+        <span class="tag t-org">⏰ 近期报名中</span>
+        <span class="tag t-purple">🎓 高校限定</span>
+        <span class="tag t-pink">🎞️ 赛道：AIGC应用创新 / 内容创作</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>
+        面向<span class="rh">全国（含港澳台）高校在校生</span>，以vivo自研大模型矩阵（蓝心大模型）为技术底座。
+        聚焦AIGC应用创新和内容创作。
+      </div>
+    </div>
+
+    <div class="card s-closed" data-status="closed">
+      <div class="card-top">
+        <div class="card-name"><a href="https://www.aitop100.cn/infomation/details/33102.html" target="_blank" rel="noopener">2026 京东首届AI影视创作大赛</a></div>
+        <span class="badge closed">已截止</span>
+      </div>
+      <div class="tags">
+        <span class="tag">🏢 京东</span>
+        <span class="tag">⏰ 截止 2月1日</span>
+        <span class="tag t-cyan">💰 最高10万元</span>
+        <span class="tag t-pink">🎞️ 赛道：AI影视短片</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>AI原创短片<span class="rh">≥15秒</span>，结合京东IP「马红红」或数字人男团E'Core创作。
+        不限AI工具，视频热度50%+专家评审50%。
+      </div>
+    </div>
+
+    <div class="card s-closed" data-status="closed">
+      <div class="card-top">
+        <div class="card-name"><a href="https://www.runninghub.cn/ai-detail/2012115244914577410" target="_blank" rel="noopener">RunningHub「骏马新程·创作新生」2026创作者大赛</a></div>
+        <span class="badge closed">已截止</span>
+      </div>
+      <div class="tags">
+        <span class="tag">🏢 RunningHub</span>
+        <span class="tag">⏰ 截止 2月23日</span>
+        <span class="tag t-cyan">💰 总奖金25,000元</span>
+        <span class="tag t-pink">🎞️ 赛道：AI视频创作</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>以<span class="rh">"骏马"</span>为命题，时长<span class="rh">≥30秒</span>，必须用RunningHub平台模型完成，含官方水印。
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ======================= -->
+<!-- 2️⃣ 内容/视频平台 -->
+<!-- ======================= -->
+<div class="category">
+  <div class="category-header">
+    <div class="cat-icon c2">📺</div>
+    <div><span class="cat-title">内容/视频平台</span><span class="cat-count">7场</span></div>
+  </div>
+  <div class="cards">
+
+    <div class="card s-ongoing" data-status="ongoing">
+      <div class="card-top">
+        <div class="card-name"><a href="https://jimeng.jianying.com/" target="_blank" rel="noopener">即梦AI 创作者成长计划·新影像（长期计划）</a></div>
+        <span class="badge ongoing">持续征稿</span>
+      </div>
+      <div class="tags">
+        <span class="tag">📺 字节跳动·即梦AI</span>
+        <span class="tag t-org">⏰ 截止 6月30日</span>
+        <span class="tag t-cyan">💰 单条最高10万元</span>
+        <span class="tag t-pink">🎞️ 赛道：AI短片创作（全类型）</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>在即梦平台发布优质AI短片即可参与。评估维度：画面美学、视听语言、人物场景设计、情节节奏、创新表现。
+        优质短片<span class="rh">1888积分/条</span>，精选<span class="rh">28888积分/条</span>。同步小红书/抖音额外积分，爆款周TOP5<span class="rw">2000元现金</span>。宣推单条最高<span class="rw">10万元</span>。
+      </div>
+    </div>
+
+    <div class="card s-ongoing" data-status="ongoing">
+      <div class="card-top">
+        <div class="card-name"><a href="https://jimeng.jianying.com/" target="_blank" rel="noopener">即梦AI 周挑战赛（系列周期赛）</a></div>
+        <span class="badge ongoing">持续征稿</span>
+      </div>
+      <div class="tags">
+        <span class="tag">📺 字节跳动·即梦AI</span>
+        <span class="tag t-purple">🔄 每周滚动</span>
+        <span class="tag t-cyan">💰 积分奖励</span>
+        <span class="tag t-pink">🎞️ 赛道：每周主题挑战</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>即梦平台<span class="rh">每周一期</span>主题挑战赛，滚动征稿。
+        按当期主题使用即梦AI创作作品即可，门槛低、频率高。
+        通过 jimeng.jianying.com 活动区参与。
+      </div>
+    </div>
+
+    <div class="card s-soon" data-status="soon">
+      <div class="card-top">
+        <div class="card-name"><a href="https://www.aibetas.com.cn/p/5848.html" target="_blank" rel="noopener">Bilibili AI创作大赛 · 按下故事的生成键</a></div>
+        <span class="badge soon">即将截止</span>
+      </div>
+      <div class="tags">
+        <span class="tag">📺 B站 × 三体宇宙</span>
+        <span class="tag t-org">⏰ 截止 3月20日</span>
+        <span class="tag t-cyan">💰 总奖金超300万元</span>
+        <span class="tag t-pink">🎞️ 赛道：开放赛道 / 三体改编赛道</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>
+        双赛道：①<span class="rh">开放赛道</span>（不限题材，≥3分钟完整故事）；②<span class="rh">三体赛道</span>（基于《三体》改编，1-5分钟）。
+        须原创首次发布于B站，带 #B站AI创作大赛# 投稿。
+      </div>
+    </div>
+
+    <div class="card s-open" data-status="open">
+      <div class="card-top">
+        <div class="card-name"><a href="http://www.sh.chinanews.com.cn/wenhua/2026-03-28/145608.shtml" target="_blank" rel="noopener">2026 上海大学AI短剧创作大赛</a></div>
+        <span class="badge open">征稿中</span>
+      </div>
+      <div class="tags">
+        <span class="tag">📺 上海大学 × 小云雀AI</span>
+        <span class="tag t-org">⏰ 截止 5月28日</span>
+        <span class="tag t-cyan">💰 多级奖项+特别奖</span>
+        <span class="tag t-pink">🎞️ 赛道：AI短剧创作</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>
+        主题<span class="rh">"智绘静安·高清未来"</span>，AIGC画面占比<span class="rh">≥50%</span>。
+        推荐<span class="rw">Seedance2.0（小云雀AI）</span>，≥2集，单集≥2分钟，1080P+。
+        投稿邮箱 duanju2026@126.com。
+      </div>
+    </div>
+
+    <div class="card s-closed" data-status="closed">
+      <div class="card-top">
+        <div class="card-name"><a href="https://www.aitop100.cn/infomation/details/" target="_blank" rel="noopener">2025 AIGC创意设计大赛（CECC）</a></div>
+        <span class="badge closed">已截止</span>
+      </div>
+      <div class="tags">
+        <span class="tag">📺 教育部就业协会 × CECC</span>
+        <span class="tag">⏰ 截止 3月2日</span>
+        <span class="tag t-pink">🎞️ 赛道：AI创意视频设计</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>全球创作者，含AI创意视频设计赛道。评审：创意+AI创新性、视觉审美、叙事连贯性。
+      </div>
+    </div>
+
+    <div class="card s-closed" data-status="closed">
+      <div class="card-top">
+        <div class="card-name">支付宝AIGC视频设计创新大赛</div>
+        <span class="badge closed">已截止</span>
+      </div>
+      <div class="tags">
+        <span class="tag">📺 支付宝 × 堆友</span>
+        <span class="tag">⏰ 截止 2025.7.20</span>
+        <span class="tag t-cyan">💰 亿级流量曝光</span>
+        <span class="tag t-pink">🎞️ 赛道：AIGC视频设计</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>AIGC作品，任意AI工具生成，<span class="rh">堆友+支付宝双平台发布</span>，可用PS/剪映后期。
+      </div>
+    </div>
+
+    <div class="card s-closed" data-status="closed">
+      <div class="card-top">
+        <div class="card-name">爱奇艺「与AI共生」AI短片创作大赛</div>
+        <span class="badge closed">已截止</span>
+      </div>
+      <div class="tags">
+        <span class="tag">📺 爱奇艺</span>
+        <span class="tag">⏰ 2025年已截止</span>
+        <span class="tag t-pink">🎞️ 赛道：AI短片 / AI剧场</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>AI短片<span class="rh">1-5分钟</span>，获奖作品获尖叫之夜展示。另有AI剧场≥15分钟长叙事计划。
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ======================= -->
+<!-- 3️⃣ 学术/政府/电影节 -->
+<!-- ======================= -->
+<div class="category">
+  <div class="category-header">
+    <div class="cat-icon c3">🏛️</div>
+    <div><span class="cat-title">学术 / 政府 / 电影节机构</span><span class="cat-count">6场</span></div>
+  </div>
+  <div class="cards">
+
+    <div class="card s-today" data-status="today">
+      <div class="card-top">
+        <div class="card-name"><a href="https://lumio.qq.com/bjiff" target="_blank" rel="noopener">第十六届北影节 · AIGC电影单元征片</a></div>
+        <span class="badge today">今日截止</span>
+      </div>
+      <div class="tags">
+        <span class="tag">🏛️ 北京国际电影节</span>
+        <span class="tag t-org">⏰ 截止 3月30日</span>
+        <span class="tag t-cyan">💰 十万元奖金池+荣誉</span>
+        <span class="tag t-pink">🎞️ 赛道：长片组 / 短片组 / AI剧集组</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>三组：①<span class="rh">长片组</span>（≥45min，AI≥50%）；②<span class="rh">短片组</span>（1-20min，AI≥70%）；③<span class="rh">AI剧集组</span>（单集1-5min，≥8集，AI≥50%）。
+        需附创作阐述（AI工具+生成流程）。投稿：腾讯视频灵芽社区。
+      </div>
+    </div>
+
+    <div class="card s-today" data-status="today">
+      <div class="card-top">
+        <div class="card-name"><a href="https://www.bjiff.com/xghd/xqdy/AIGCyxip_19731/" target="_blank" rel="noopener">第十六届北影节 · AIGC游戏IP短片大赛</a></div>
+        <span class="badge today">今日截止</span>
+      </div>
+      <div class="tags">
+        <span class="tag">🏛️ 北影节 × 京东</span>
+        <span class="tag t-org">⏰ 截止 3月31日</span>
+        <span class="tag t-cyan">💰 冠军10万元</span>
+        <span class="tag t-pink">🎞️ 赛道：游戏IP短剧（十二姬次元宇宙）</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>围绕京东「十二姬」IP创作短剧，每集<span class="rh">≥15秒</span>，含≥1位十二姬形象。
+        AI使用率<span class="rh">≥50%</span>，≥1080P。4月19日颁奖。
+      </div>
+    </div>
+
+    <div class="card s-open" data-status="open">
+      <div class="card-top">
+        <div class="card-name">2026 数字中国创新大赛 · 人工智能赛道</div>
+        <span class="badge open">征稿中</span>
+      </div>
+      <div class="tags">
+        <span class="tag">🏛️ 数字中国峰会组委会</span>
+        <span class="tag t-org">⏰ 3月-5月赛程</span>
+        <span class="tag t-purple">🏆 国家级赛事</span>
+        <span class="tag t-pink">🎞️ 赛道：人工智能+应用创新</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>紧扣<span class="rh">"人工智能+"</span>核心，面向全社会开放。聚焦AI前沿技术与应用创新。
+        决赛于数字中国峰会期间举行。
+      </div>
+    </div>
+
+    <div class="card s-open" data-status="open">
+      <div class="card-top">
+        <div class="card-name">2026"马栏山杯" 国际音视频算法大赛AIGC专题赛</div>
+        <span class="badge open">征稿中</span>
+      </div>
+      <div class="tags">
+        <span class="tag">🏛️ 芒果TV × 未来设计师NCDA</span>
+        <span class="tag t-org">⏰ 近期报名中</span>
+        <span class="tag t-cyan">💰 30万奖金</span>
+        <span class="tag t-pink">🎞️ 赛道：AIGC音视频算法应用</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>聚焦<span class="rh">AIGC音视频算法应用</span>，面向设计师群体。
+        实践挑战赛形式，助力技术落地。
+      </div>
+    </div>
+
+    <div class="card s-closed" data-status="closed">
+      <div class="card-top">
+        <div class="card-name"><a href="https://www.aitop100.cn/infomation/details/33126.html" target="_blank" rel="noopener">首届"无限可能"AI短片创投计划</a></div>
+        <span class="badge closed">已截止</span>
+      </div>
+      <div class="tags">
+        <span class="tag">🏛️ 中制协 · 中国电视剧制作产业大会</span>
+        <span class="tag">⏰ 截止 3月10日</span>
+        <span class="tag t-pink">🎞️ 赛道：AI短片创投（铂金/白银/青铜/荣耀/大学生新星）</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>AIGC镜头占比<span class="rh">≥90%</span>，音频也须AIGC生成。1-5分钟，1080P，MOV/MP4。
+        设铂金/白银/青铜/荣耀短片等扶持，含AI技术短片、大学生新星等专项。
+      </div>
+    </div>
+
+    <div class="card s-closed" data-status="closed">
+      <div class="card-top">
+        <div class="card-name">2025 中国创新影像大赛（央视AIGC平台）</div>
+        <span class="badge closed">已截止</span>
+      </div>
+      <div class="tags">
+        <span class="tag">🏛️ 中央广播电视总台</span>
+        <span class="tag">⏰ 2025年已截止</span>
+        <span class="tag t-pink">🎞️ 赛道：AI影像创新</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>通过央视AIGC线上平台投稿，聚焦AI在影像创作中的创新应用。
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ======================= -->
+<!-- 4️⃣ 国际电影节 -->
+<!-- ======================= -->
+<div class="category">
+  <div class="category-header">
+    <div class="cat-icon c4">🌍</div>
+    <div><span class="cat-title">国际电影节 / 影赛</span><span class="cat-count">6场</span></div>
+  </div>
+  <div class="cards">
+
+    <div class="card s-open" data-status="open">
+      <div class="card-top">
+        <div class="card-name"><a href="https://aiff.runwayml.com/" target="_blank" rel="noopener">Runway AI Festival 2026 (AIF)</a></div>
+        <span class="badge open">征稿中</span>
+      </div>
+      <div class="tags">
+        <span class="tag">🌍 Runway (美国)</span>
+        <span class="tag t-org">⏰ 截止 4月20日</span>
+        <span class="tag t-cyan">💰 大奖 $50,000</span>
+        <span class="tag t-pink">🎞️ 赛道：影片 / 新媒体 / 游戏 / 设计 / 广告 / 时尚</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>影片类<span class="rh">3-15分钟</span>，须含生成式视频技术，完整线性叙事。
+        另设新媒体/游戏/设计/广告/时尚类。6月纽约+洛杉矶展映。
+      </div>
+    </div>
+
+    <div class="card s-open" data-status="open">
+      <div class="card-top">
+        <div class="card-name"><a href="https://aiforgood.itu.int/ai-for-good-film-festival/" target="_blank" rel="noopener">AI for Good Film Festival 2026</a></div>
+        <span class="badge open">征稿中</span>
+      </div>
+      <div class="tags">
+        <span class="tag">🌍 ITU 联合国 (日内瓦)</span>
+        <span class="tag t-org">⏰ 截止 5月1日</span>
+        <span class="tag t-cyan">💰 日内瓦峰会展示</span>
+        <span class="tag t-pink">🎞️ 赛道：AI短片（1-10分钟）</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>影片<span class="rh">1-10分钟</span>，AI为核心组成部分（不要求全程AI）。
+        2025.5-2026.5期间完成，每团队限1部，需英文字幕。入围作品在<span class="rw">日内瓦AI for Good全球峰会</span>展映。
+      </div>
+    </div>
+
+    <div class="card s-open" data-status="open">
+      <div class="card-top">
+        <div class="card-name"><a href="https://www.lifeartfestival.com/ai" target="_blank" rel="noopener">LifeArt AI Film Festival 2026</a></div>
+        <span class="badge open">征稿中</span>
+      </div>
+      <div class="tags">
+        <span class="tag">🌍 LifeArt (美国/印度)</span>
+        <span class="tag t-org">⏰ 常规 5月1日 / 延迟 6月2日</span>
+        <span class="tag t-cyan">💰 IMDb认证+全球发行</span>
+        <span class="tag t-pink">🎞️ 赛道：AI电影 / 动画 / 广告 / MV / 数字艺术（75+类别）</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>作品需<span class="rh">有意义地运用AI</span>，不限工具。接受AI电影/动画/广告/MV/数字艺术等。
+        <span class="rw">75+奖项类别</span>，含人道主义AI奖。通过FilmFreeway提交。
+      </div>
+    </div>
+
+    <div class="card s-open" data-status="open">
+      <div class="card-top">
+        <div class="card-name"><a href="https://filmfreeway.com/HKUST-AI-Film" target="_blank" rel="noopener">HKUST AI Film Festival — 2nd Edition</a></div>
+        <span class="badge open">征稿中</span>
+      </div>
+      <div class="tags">
+        <span class="tag">🌍 香港科技大学</span>
+        <span class="tag t-org">⏰ 5月中旬举办</span>
+        <span class="tag t-purple">🎓 学术电影节</span>
+        <span class="tag t-pink">🎞️ 赛道：AI叙事 / AI纪录片 / AI音乐影像 / AI实验</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>主竞赛单元<span class="rh">>3分钟</span>，1080P，MP4/MOV，H.264。
+        须提交PDF说明AI工具+工作流程+过程截图。通过<span class="rw">FilmFreeway</span>提交。
+        邮箱 hkustaiff@ust.hk。
+      </div>
+    </div>
+
+    <div class="card s-closed" data-status="closed">
+      <div class="card-top">
+        <div class="card-name"><a href="https://worldaifilmfestival.com/" target="_blank" rel="noopener">World A.I. Film Festival 2026 (戛纳)</a></div>
+        <span class="badge closed">已截止</span>
+      </div>
+      <div class="tags">
+        <span class="tag">🌍 Institut EuropIA (法国)</span>
+        <span class="tag">⏰ 截止 2月27日</span>
+        <span class="tag t-cyan">💰 戛纳电影宫颁奖</span>
+        <span class="tag t-pink">🎞️ 赛道：AI电影 / AI短片（全球分赛区）</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>AI生成电影/短片，全球分赛区评选。每国前5名晋级<span class="rh">戛纳电影宫</span>总决赛（4月21-22日）。
+      </div>
+    </div>
+
+    <div class="card s-closed" data-status="closed">
+      <div class="card-top">
+        <div class="card-name">Beyond Vision Film Festival 2026</div>
+        <span class="badge closed">已截止</span>
+      </div>
+      <div class="tags">
+        <span class="tag">🌍 VeyoLabs (国际)</span>
+        <span class="tag">⏰ 截止 3月31日</span>
+        <span class="tag t-cyan">💰 大奖：2年工作室合约</span>
+        <span class="tag t-pink">🎞️ 赛道：AI短片（3-10分钟）</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>影片<span class="rh">3-10分钟</span>，AI生成或AI辅助，≥1080P。近12个月内原创。
+        大奖为2年工作室+发行合约+全额资金。金奖$10,000。
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ======================= -->
+<!-- 5️⃣ 国际科技/创意机构 -->
+<!-- ======================= -->
+<div class="category">
+  <div class="category-header">
+    <div class="cat-icon c5">💎</div>
+    <div><span class="cat-title">国际科技 / 创意机构</span><span class="cat-count">3场</span></div>
+  </div>
+  <div class="cards">
+
+    <div class="card s-open" data-status="open">
+      <div class="card-top">
+        <div class="card-name"><a href="https://aiscreenawards.org/" target="_blank" rel="noopener">AI Screen Awards 2026 (AISA)</a></div>
+        <span class="badge open">征稿中</span>
+      </div>
+      <div class="tags">
+        <span class="tag">💎 AISA (国际)</span>
+        <span class="tag t-org">⏰ 4月1日开启 / 5月15日截止</span>
+        <span class="tag t-cyan">💰 75个奖项类别</span>
+        <span class="tag t-pink">🎞️ 赛道：短片 / 长片 / 垂直视频（75类别）</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>2025.1.1后完成，接受<span class="rh">所有类型+所有AI工具</span>。
+        短片<40分钟，长片不限。垂直内容须9:16。需披露AI工具。通过FilmFreeway提交。
+      </div>
+    </div>
+
+    <div class="card s-open" data-status="open">
+      <div class="card-top">
+        <div class="card-name"><a href="https://www.aimagica.org/" target="_blank" rel="noopener">AIMagica AI Film Festival 2026</a></div>
+        <span class="badge open">征稿中</span>
+      </div>
+      <div class="tags">
+        <span class="tag">💎 AIMagica (国际)</span>
+        <span class="tag t-org">⏰ 第一轮截止 4月2日</span>
+        <span class="tag t-purple">🔄 双轮评选</span>
+        <span class="tag t-pink">🎞️ 赛道：长片 / 短片 / 纪录片（混合电影）</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>庆祝<span class="rh">混合电影创新</span>（Hybrid Cinema），接受长片/短片/纪录片。
+        全年两轮：6月展映（4.2截止）+9月颁奖（7.2截止）。
+      </div>
+    </div>
+
+    <div class="card s-open" data-status="open">
+      <div class="card-top">
+        <div class="card-name"><a href="https://challenges.reply.com/challenges/creative/aifilmfestival-2025/home/" target="_blank" rel="noopener">Reply AI Film Festival 2026（威尼斯）</a></div>
+        <span class="badge open">征稿中</span>
+      </div>
+      <div class="tags">
+        <span class="tag">💎 Reply × 万事达卡</span>
+        <span class="tag t-org">⏰ 截止 6月1日</span>
+        <span class="tag t-cyan">💰 威尼斯电影节展映</span>
+        <span class="tag t-pink">🎞️ 赛道：AI短片（主题：Generation of Emotions）</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>主题<span class="rh">"Generation of Emotions"</span>，探索AI创造真实情感的影视体验。
+        18岁以上全球创作者，决赛在<span class="rw">第83届威尼斯国际电影节</span>期间举行。公布3名获奖者。
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ======================= -->
+<!-- 6️⃣ TapNow 平台 -->
+<!-- ======================= -->
+<div class="category">
+  <div class="category-header">
+    <div class="cat-icon c6">🚀</div>
+    <div><span class="cat-title">TapNow 平台</span><span class="cat-count">2场</span></div>
+  </div>
+  <div class="cards">
+
+    <div class="card s-ongoing" data-status="ongoing">
+      <div class="card-top">
+        <div class="card-name"><a href="https://www.tapnow.ai/zh/creator-program" target="_blank" rel="noopener">TapNow 社区创作者计划（长期招募）</a></div>
+        <span class="badge ongoing">持续招募</span>
+      </div>
+      <div class="tags">
+        <span class="tag">🚀 TapNow AI</span>
+        <span class="tag t-purple">🔄 长期有效</span>
+        <span class="tag t-cyan">💰 月积分享创作激励</span>
+        <span class="tag t-pink">🎞️ 赛道：内容创作者 / TapTV讲师 / 推广大使 / 社区大使</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>四类角色：<span class="rh">内容创作者</span>（AI视频>15秒，画布公开>80%）、TapTV讲师、推广大使、社区大使。
+        L1-L4等级体系，L1月<span class="rw">300积分</span>，L4月<span class="rw">30,000积分</span>+签约导演机会。
+        高等级可获产品共创+商业合作。
+      </div>
+    </div>
+
+    <div class="card s-open" data-status="open">
+      <div class="card-top">
+        <div class="card-name"><a href="https://app.tapnow.ai/event/22" target="_blank" rel="noopener">TapTV Arena x 2026 MIT 全球AI电影黑客松</a></div>
+        <span class="badge open">征稿中</span>
+      </div>
+      <div class="tags">
+        <span class="tag">🚀 TapNow × MIT</span>
+        <span class="tag t-org">⏰ 2026 MIT活动期间</span>
+        <span class="tag t-cyan">💰 全球巡回赛</span>
+        <span class="tag t-pink">🎞️ 赛道：AI电影黑客松（36h动画/全球巡回）</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>自2023年MIT创立，重塑角色、叙事与电影未来。全球AI电影黑客松巡回赛。
+        TapTV Arena全球巡回，已在北京启动36小时动画黑客松站。通过 <span class="rw">app.tapnow.ai/event/22</span> 参与。
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ======================= -->
+<!-- 7️⃣ AI工具品牌联名 -->
+<!-- ======================= -->
+<div class="category">
+  <div class="category-header">
+    <div class="cat-icon c7">🤝</div>
+    <div><span class="cat-title">AI工具品牌联名 / IP合作赛</span><span class="cat-count">4场</span></div>
+  </div>
+  <div class="cards">
+
+    <div class="card s-closed" data-status="closed">
+      <div class="card-top">
+        <div class="card-name"><a href="https://party.163.com/official/20251230/35180_1279422.html" target="_blank" rel="noopener">可灵AI × 蛋仔派对「蛋仔闯入计划」AIGC创作大赛</a></div>
+        <span class="badge closed">已截止</span>
+      </div>
+      <div class="tags">
+        <span class="tag">🤝 可灵AI × 蛋仔派对</span>
+        <span class="tag">⏰ 征集截止 3月4日</span>
+        <span class="tag t-cyan">💰 双赛道共40个获奖名额</span>
+        <span class="tag t-pink">🎞️ 赛道：特效赛道 / 短片赛道</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>双赛道：①<span class="rh">特效赛道</span>（用指定特效创作5秒短视频）；②<span class="rh">短片赛道</span>（围绕蛋仔形象，≥20秒，50%以上由可灵AI生成）。
+        需在快手平台带话题发布。4月16日颁奖。
+      </div>
+    </div>
+
+    <div class="card s-closed" data-status="closed">
+      <div class="card-top">
+        <div class="card-name">可灵AI × 金投赏 AIGC广告创意大赛</div>
+        <span class="badge closed">已截止</span>
+      </div>
+      <div class="tags">
+        <span class="tag">🤝 可灵AI × 金投赏</span>
+        <span class="tag">⏰ 截止 2025.8.15</span>
+        <span class="tag t-cyan">💰 亮相金投赏颁奖典礼</span>
+        <span class="tag t-pink">🎞️ 赛道：AIGC广告创意（超创组 / 代理公司组）</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>50%以上时长由<span class="rh">可灵AI</span>大模型生成，15-90秒，≥1080P。
+        已出街广告或虚拟产品广告均可。超创组+代理公司组。
+      </div>
+    </div>
+
+    <div class="card s-closed" data-status="closed">
+      <div class="card-top">
+        <div class="card-name">可灵AI × 一汽大众速腾 AIGC创作大赛</div>
+        <span class="badge closed">已截止</span>
+      </div>
+      <div class="tags">
+        <span class="tag">🤝 可灵AI × 一汽大众</span>
+        <span class="tag">⏰ 近期已截止</span>
+        <span class="tag t-pink">🎞️ 赛道：品牌AIGC创作</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>围绕速腾品牌进行AIGC创作。通过可灵AI平台投稿。
+      </div>
+    </div>
+
+    <div class="card s-closed" data-status="closed">
+      <div class="card-top">
+        <div class="card-name"><a href="https://www.aitop100.cn/infomation/details/33027.html" target="_blank" rel="noopener">「故事觉醒计划」AI动画大赛（50万奖金池）</a></div>
+        <span class="badge closed">已截止</span>
+      </div>
+      <div class="tags">
+        <span class="tag">🤝 多态云脑 × 阿里云</span>
+        <span class="tag">⏰ 截止 1月31日</span>
+        <span class="tag t-cyan">💰 总奖金50万元</span>
+        <span class="tag t-pink">🎞️ 赛道：AI动画短片（主题"觉醒"）</span>
+      </div>
+      <div class="divider"></div>
+      <div class="req">
+        <span class="rl">📌 核心要求：</span>主题<span class="rh">"觉醒"</span>，1-5分钟，AI生成内容<span class="rh">≥70%</span>（含角色/场景/动画/配音）。
+        一等奖<span class="rw">20万元</span>+创作基金+商业合作。全球创作者均可参加。
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <strong>📋 数据采集日期：2026年3月31日</strong> · 所有截止日期以各比赛官方最新公告为准<br>
+  点击活动名称可直接跳转至官方活动页 · 建议参赛前再次确认官方规则<br>
+  页面顶部时钟与倒计时实时更新 · <span style="color:var(--accent-pink);">🎞️ 赛道标签标注了各比赛的核心赛道方向</span><br>
+  <span style="color:var(--accent-purple);margin-top:6px;display:inline-block;">✨ 祝创作顺利，收获佳绩！</span>
+</div>
+
+<script>
+// === LIVE CLOCK ===
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toLocaleString('zh-CN', {
+    year:'numeric', month:'2-digit', day:'2-digit',
+    hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false
+  });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// === AUTO STATUS ENGINE ===
+var BADGE_TEXT = { today:'今日截止', soon:'即将截止', open:'征稿中', closed:'已截止', ongoing:'持续征稿' };
+
+// 手动维护的截止日期表（比赛名关键词 → YYYY-MM-DD）
+var DEADLINES = {
+  '可灵AI NEXTGEN': '2026-05-15',
+  '马栏山杯"AIGC原创动漫': '2026-05-05',
+  'AIGC未来创作联赛': '2026-03-31',
+  'AIGC创新赛（第三届）': null,
+  '京东首届AI影视': '2026-02-01',
+  'RunningHub': '2026-02-23',
+  '即梦AI 创作者成长计划': '2026-06-30',
+  '即梦AI 周挑战赛': null,
+  'Bilibili AI创作大赛': '2026-03-20',
+  '上海大学AI短剧': '2026-05-28',
+  'AIGC创意设计大赛（CECC）': '2026-03-02',
+  '支付宝AIGC视频设计': '2025-07-20',
+  '爱奇艺': '2025-12-31',
+  '北影节 · AIGC电影单元': '2026-03-30',
+  '北影节 · AIGC游戏IP': '2026-03-31',
+  '数字中国创新大赛': '2026-05-31',
+  '马栏山杯" 国际音视频算法': '2026-05-31',
+  '无限可能"AI短片创投': '2026-03-10',
+  '中国创新影像大赛': '2025-12-31',
+  'Runway AI Festival': '2026-04-20',
+  'AI for Good Film': '2026-05-01',
+  'LifeArt AI Film': '2026-06-02',
+  'HKUST AI Film': '2026-05-15',
+  'World A.I. Film': '2026-02-27',
+  'Beyond Vision': '2026-03-31',
+  'AI Screen Awards': '2026-05-15',
+  'AIMagica AI Film': '2026-07-02',
+  'Reply AI Film': '2026-06-01',
+  'TapNow 社区创作者': null,
+  'MIT 全球AI电影黑客松': '2026-12-31',
+  '蛋仔闯入计划': '2026-03-04',
+  '金投赏 AIGC广告': '2025-08-15',
+  '一汽大众速腾': '2025-12-31',
+  '故事觉醒计划': '2026-01-31'
+};
+
+function calcStatus(deadline, isOngoing) {
+  if (isOngoing || deadline === null) return 'ongoing';
+  var now = new Date();
+  var dl = new Date(deadline + 'T23:59:59+08:00');
+  var diffDays = Math.ceil((dl - now) / 86400000);
+  if (diffDays < 0) return 'closed';
+  if (diffDays === 0) return 'today';
+  if (diffDays <= 7) return 'soon';
+  return 'open';
+}
+
+function updateAllCardStatuses() {
+  var cards = document.querySelectorAll('.card');
+  var counts = { open:0, soon:0, today:0, ongoing:0, closed:0 };
+
+  cards.forEach(function(card) {
+    var nameEl = card.querySelector('.card-name');
+    var name = nameEl ? nameEl.textContent : '';
+    var deadline = null;
+    for (var key in DEADLINES) {
+      if (name.indexOf(key) !== -1) { deadline = DEADLINES[key]; break; }
+    }
+    var newStatus = calcStatus(deadline, false);
+    card.dataset.deadline = deadline || '';
+    card.dataset.status = newStatus;
+
+    card.classList.remove('s-open','s-soon','s-today','s-closed','s-ongoing','hide');
+    card.classList.add('s-' + newStatus);
+
+    var badge = card.querySelector('.badge');
+    if (badge) {
+      badge.className = 'badge ' + newStatus;
+      badge.textContent = BADGE_TEXT[newStatus] || newStatus;
+    }
+    counts[newStatus] = (counts[newStatus] || 0) + 1;
+  });
+
+  var total = cards.length;
+  var el = function(id) { return document.getElementById(id); };
+  if (el('stat-total')) el('stat-total').textContent = total;
+  if (el('stat-open')) el('stat-open').textContent = counts.open;
+  if (el('stat-soon')) el('stat-soon').textContent = counts.soon;
+  if (el('stat-ongoing')) el('stat-ongoing').textContent = counts.ongoing;
+  if (el('stat-closed')) el('stat-closed').textContent = counts.closed;
+
+  var activeTab = document.querySelector('.nav-tab.active');
+  if (activeTab) {
+    var onclickStr = activeTab.getAttribute('onclick') || '';
+    var m = onclickStr.match(/'(\w+)'/);
+    if (m) filter(m[1]);
+  }
+}
+updateAllCardStatuses();
+setInterval(updateAllCardStatuses, 60000);
+
+// === COUNTDOWN PROGRESS ===
+var competitions = [
+  { name: '可灵AI高校大赛', deadline: '2026-05-15' },
+  { name: '马栏山杯AIGC', deadline: '2026-05-05' },
+  { name: 'Runway AIF 2026', deadline: '2026-04-20' },
+  { name: 'AIMagica 第一轮', deadline: '2026-04-02' },
+  { name: 'AI Screen Awards', deadline: '2026-05-15' },
+  { name: 'AI for Good', deadline: '2026-05-01' },
+  { name: '上海大学AI短剧', deadline: '2026-05-28' },
+  { name: '即梦AI成长计划', deadline: '2026-06-30' },
+  { name: 'LifeArt (常规)', deadline: '2026-05-01' },
+  { name: 'Reply AI (威尼斯)', deadline: '2026-06-01' },
+  { name: 'LifeArt (延迟)', deadline: '2026-06-02' },
+  { name: 'AIMagica 第二轮', deadline: '2026-07-02' },
+];
+function renderProgress() {
+  var grid = document.getElementById('progressGrid');
+  var now = new Date();
+  grid.innerHTML = '';
+  competitions.forEach(function(c) {
+    var dl = new Date(c.deadline + 'T23:59:59+08:00');
+    var diff = dl - now;
+    var totalDays = Math.max(1, Math.ceil((dl - new Date(c.deadline.split('-')[0] + '-01-01')) / 86400000));
+    var elapsed = totalDays - Math.max(0, Math.ceil(diff / 86400000));
+    var pct = Math.min(100, Math.max(0, (elapsed / totalDays) * 100));
+    var daysLeft = Math.max(0, Math.ceil(diff / 86400000));
+    var color = 'green', daysText = '剩余 ' + daysLeft + ' 天';
+    if (daysLeft === 0) { color = 'red'; daysText = '今日截止！'; }
+    else if (daysLeft <= 3) { color = 'red'; daysText = '仅剩 ' + daysLeft + ' 天'; }
+    else if (daysLeft <= 7) { color = 'orange'; daysText = '剩余 ' + daysLeft + ' 天'; }
+    if (daysLeft < 0) return;
+    var div = document.createElement('div');
+    div.className = 'progress-item';
+    div.innerHTML = '<div class="progress-bar-wrap"><div class="progress-name">' + c.name + '</div><div class="progress-bar"><div class="progress-fill ' + color + '" style="width:' + pct + '%"></div></div></div><div class="progress-days" style="color:var(--accent-' + (color === 'green' ? 'green' : color === 'orange' ? 'orange' : 'red') + ')">' + daysText + '</div>';
+    grid.appendChild(div);
+  });
+}
+renderProgress();
+setInterval(renderProgress, 60000);
+
+// === FILTER TABS ===
+function filter(status) {
+  document.querySelectorAll('.nav-tab').forEach(function(t) { t.classList.remove('active'); });
+  if (event && event.target) event.target.classList.add('active');
+  document.querySelectorAll('.card').forEach(function(card) {
+    var s = card.dataset.status;
+    if (status === 'all') { card.classList.remove('hide'); }
+    else if (status === 'open' && (s === 'open' || s === 'ongoing')) { card.classList.remove('hide'); }
+    else if (status === 'soon') { card.classList.toggle('hide', s !== 'soon'); }
+    else { card.classList.toggle('hide', s !== status); }
+  });
+}
+</script>
+</body>
+</html>
